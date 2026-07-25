@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /templates/{templateId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /websites/{websiteId} {
+      // `template` (the public site renderer) reads this doc with no auth —
+      // read access must stay open. Only writes are gated, to the owner,
+      // and only the `config` field may change.
+      allow read: if true;
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['config']);
+      allow create, delete: if false;
+    }
+  }
+}
