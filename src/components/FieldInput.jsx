@@ -35,7 +35,7 @@ export default function FieldInput({ field, value, onChange }) {
       )
     case 'url':
       return <input type="url" value={stringValue} onChange={(e) => onChange(e.target.value)} />
-    case 'switch':
+    case 'boolean':
       return (
         <input
           type="checkbox"

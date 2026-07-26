@@ -30,33 +30,40 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h1>Đăng nhập</h1>
-        <label>
-          Email
-          <input
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Mật khẩu
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error && <p className="form-error">{error}</p>}
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-        </button>
-      </form>
+      <div className="login-card">
+        <span className="brand-mark">
+          <span className="brand-mark-icon">✦</span>
+          Website Editor
+        </span>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <h1>Đăng nhập</h1>
+          <p className="login-subtitle">Quản lý nội dung website của bạn</p>
+          <label>
+            Email
+            <input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Mật khẩu
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <button type="submit" disabled={submitting}>
+            {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          </button>
+        </form>
+      </div>
     </main>
   )
 }

@@ -7,7 +7,7 @@ export function buildDefault(field) {
       return Object.fromEntries(field.fields.map((f) => [f.key, buildDefault(f)]))
     case 'array':
       return []
-    case 'switch':
+    case 'boolean':
       return false
     case 'number':
       return null

@@ -14,7 +14,7 @@ every site they own.
 
 ```
 users/{uid}                doc: { role }
-templates/{templateId}     doc: { config: "<JSON string>" }
+templates/{templateId}     doc: { sectionOrder: [...], themes: {...}, schema: {...} }
 websites/{websiteId}       doc: { ownerId, templateId, config: "<JSON string>" }
 ```
 
@@ -22,73 +22,155 @@ websites/{websiteId}       doc: { ownerId, templateId, config: "<JSON string>" }
 parsed on read and re-serialized on write (see
 [`src/lib/websites.js`](src/lib/websites.js)).
 
-`templates/{templateId}.config` is new — a JSON string (same storage
-convention as a website's own `config`) describing the editing form, parsed
-by [`src/lib/templates.js`](src/lib/templates.js). Shape:
+`templates/{templateId}` is new. Unlike `websites/{id}.config`, its fields
+are **native Firestore values** (maps/arrays), not a JSON string — read
+as-is by [`src/lib/templates.js`](src/lib/templates.js), no `JSON.parse`.
+Three separate top-level fields on the doc:
+
+- **`schema`** (required) — an object map keyed by section id, each
+  section's `fields` in turn keyed by field key (not arrays of `{key, ...}`
+  — a plain map). This is what actually describes the editing form.
+- **`sectionOrder`** (optional) — an array of section ids controlling tab
+  order in the editor, since a JS/Firestore map's own key order isn't
+  something a template author can rely on for this. Any section present in
+  `schema` but missing from `sectionOrder` still shows up, appended after
+  the ordered ones — nothing gets silently dropped. Without it, tab order
+  falls back to `schema`'s own key order (what the Spa Clinic example below
+  uses — it predates `sectionOrder`).
+- **`themes`** (optional) — named color presets; see
+  [Theme presets](#theme-presets) below.
+
+`templates.js` assembles these three fields into one object and hands it to
+[`src/lib/schemaAdapter.js`](src/lib/schemaAdapter.js)'s `normalizeSchema` /
+`normalizeThemes`, which turn it into the flat, render-friendly shape
+`SchemaForm`/`SectionNav`/`ThemeEditor` consume.
+
+Authored shape of the `schema` map itself:
 
 ```json
 {
-  "name": "Spa Clinic",
-  "version": 1,
-  "sections": [
-    {
-      "id": "hero",
-      "label": "Hero Banner",
-      "fields": [
-        { "key": "title1", "label": "Tiêu đề 1", "type": "text" },
-        { "key": "image", "label": "Ảnh", "type": "image" },
-        {
-          "key": "badge", "label": "Badge", "type": "object",
-          "fields": [
-            { "key": "value", "label": "Số", "type": "text" },
-            { "key": "label", "label": "Nhãn", "type": "text" }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "services",
-      "label": "Dịch vụ",
-      "fields": [
-        {
-          "key": "items", "label": "Danh sách dịch vụ", "type": "array",
-          "item": {
-            "type": "object",
-            "fields": [
-              { "key": "title", "label": "Tên", "type": "text" },
-              { "key": "description", "label": "Mô tả", "type": "textarea" },
-              { "key": "image", "label": "Ảnh", "type": "image" }
-            ]
-          }
-        }
-      ]
+  "brand": {
+    "label": "Thương hiệu",
+    "fields": {
+      "themePrimary": { "type": "color", "label": "Màu chính" },
+      "logo": { "type": "image", "label": "Logo" },
+      "name": { "type": "text", "label": "Tên thương hiệu" }
     }
-  ]
+  },
+  "stats": {
+    "label": "Số liệu thống kê",
+    "itemLabel": "Số liệu",
+    "emptyItem": { "value": "", "label": "" },
+    "fields": {
+      "value": { "type": "text", "label": "Số liệu" },
+      "label": { "type": "text", "label": "Nhãn" }
+    }
+  },
+  "services": {
+    "label": "Dịch vụ điều trị",
+    "fields": {
+      "eyebrow": { "type": "text", "label": "Nhãn nhỏ" },
+      "title": { "type": "text", "label": "Tiêu đề" }
+    },
+    "items": {
+      "label": "Danh sách dịch vụ",
+      "itemLabel": "Dịch vụ",
+      "emptyItem": { "title": "", "tech": "", "desc": "", "image": "" },
+      "fields": {
+        "title": { "type": "text", "label": "Tên dịch vụ" },
+        "tech": { "type": "text", "label": "Công nghệ áp dụng" },
+        "desc": { "type": "textarea", "label": "Mô tả" },
+        "image": { "type": "image", "label": "Ảnh minh hoạ" }
+      }
+    }
+  },
+  "visible": {
+    "label": "Hiển thị section",
+    "fields": {
+      "hero": { "type": "boolean", "label": "Hero" },
+      "stats": { "type": "boolean", "label": "Số liệu thống kê" }
+    }
+  }
 }
 ```
 
-Each **section** becomes a tab in the editor and a top-level key in the
-website's `config` (`config.hero`, `config.services`, ...). Within a
-section, each **field**'s `key` is a property under that section, and `type`
-is one of:
+Each top-level key becomes a tab in the editor and a top-level key in the
+website's `config` (`config.brand`, `config.services`, ...). A section is one
+of three shapes, distinguished structurally (`normalizeSchema` in
+`schemaAdapter.js` detects which):
 
-- Leaves: `text`, `textarea`, `color`, `url`, `number`, `switch` (boolean toggle)
-- `image` — uploads to Firebase Storage (see below), stores the download URL
-- `object` — a fixed nested group of sub-`fields` (e.g. `hero.badge`)
-- `array` — a repeatable list of items, each shaped by `item` (typically
-  `{ type: 'object', fields: [...] }`)
+- **Object section** (`brand`, `hero`, `map`, `cta`, `footer`, `promo`,
+  `visible`): just `fields` — `config[id]` is an object, one property per
+  field key.
+- **Pure array section** (`stats`): declares `itemLabel`/`emptyItem`
+  alongside `fields` and has no separate `items` key — here `fields`
+  describes *one item*, not the section's own properties, so `config[id]` is
+  an array directly (not wrapped in `.items`).
+- **Mixed section** (`services`, `doctors`, `spaServices`, `process`,
+  `branches`, `results`): plain `fields` for the section's own scalar
+  properties **plus** a sibling `items` block (itself `{ label, itemLabel,
+  emptyItem, fields }`) — `config[id]` is an object whose `items` property is
+  the repeatable array.
 
-There's no UI yet for authoring a `templates/{templateId}.config` doc —
+Leaf field `type`s: `text`, `textarea`, `color`, `number`, `boolean`
+(checkbox), `url` (unused by the sample template above but supported).
+`image` uploads to Firebase Storage (see below) and stores the download URL.
+`object`/`array` container types also exist in the render engine
+(`src/components/SchemaFields.jsx`) for schemas that nest more deeply than
+this one does, synthesized by the adapter rather than written directly in
+the authored JSON.
+
+There's no UI yet for authoring a `templates/{templateId}.schema` doc —
 create/edit it directly in the Firebase console for each templateId a
 `websites/*` doc references. A website's editing form can't render until its
 `templateId`'s config doc exists.
+
+### Section visibility
+
+A section's own `fields` may include a `visible` (`boolean`) entry — when
+present, the editor pulls it out of the form body and renders it as an eye
+icon (👁️/🙈) next to that section's name in the sidebar instead
+([`lib/sectionVisibility.js`](src/lib/sectionVisibility.js) detects this,
+[`SectionNav.jsx`](src/components/SectionNav.jsx) renders it). Missing a
+value defaults to visible. This only applies to object-shaped sections — a
+pure array section's `visible` field (if it declares one, like `stats`)
+describes a property of each *item*, not the section, so it's left as a
+regular field in that item's card.
+
+### Theme presets
+
+A template's schema doc may also declare a top-level `themes` map, sibling
+to `sectionOrder`/`schema`, independent of any one section:
+
+```json
+{
+  "themes": {
+    "themeA": {
+      "label": "Xanh dương",
+      "colors": { "primary": "#0EA5E9", "secondary": "#0284C7", "accent": "#38BDF8", "background": "#FFFFFF", "surface": "#F8FAFC" }
+    },
+    "themeB": { "label": "Đỏ", "colors": { "...": "..." } }
+  }
+}
+```
+
+When present, the editor shows a pinned "Giao diện" tab (see
+[`ThemeEditor.jsx`](src/components/ThemeEditor.jsx)) ahead of the schema
+sections: clicking a preset card copies its `colors` into `config.theme`;
+each color also has its own picker for further customization. `config.theme`
+stores the **resolved** `{ preset, colors }` — the live site only ever needs
+to read `config.theme.colors`, it doesn't need to know about the template's
+preset list at all.
 
 ### Array items: hide vs. delete
 
 Every array item gets a reserved `hidden: boolean` alongside its declared
 fields, toggled via a checkbox in the editor without touching the item's
-content. Deleting an item removes it from the array outright. There's no
-reorder (up/down) control in the editor yet — item order in `config` is
+content. Deleting an item removes it from the array outright. Adding an item
+seeds it from the schema's authored `emptyItem` (falling back to
+type-derived empty values if a schema omits it); the "+ Thêm" button and
+each item's header label use the schema's `itemLabel` when present. There's
+no reorder (up/down) control in the editor yet — item order in `config` is
 append-only from here.
 
 **Consumer contract**: `template`'s rendering code is expected to skip items

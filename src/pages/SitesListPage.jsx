@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Loading from '../components/Loading'
 import { signOutUser, useAuthUser } from '../lib/auth'
 import { useOwnedWebsites } from '../lib/websites'
 
@@ -9,13 +10,19 @@ export default function SitesListPage() {
   return (
     <main className="sites-list-page">
       <header className="page-header">
-        <h1>Website của bạn</h1>
+        <div className="page-header-title">
+          <span className="brand-mark">
+            <span className="brand-mark-icon">✦</span>
+            Website Editor
+          </span>
+          <h1>Website của bạn</h1>
+        </div>
         <button type="button" onClick={signOutUser}>
           Đăng xuất
         </button>
       </header>
 
-      {loading && <p>Đang tải...</p>}
+      {loading && <Loading />}
       {error && <p className="form-error">Không tải được danh sách website.</p>}
       {!loading && !error && websites.length === 0 && (
         <p>Chưa có website nào được gán cho tài khoản này.</p>

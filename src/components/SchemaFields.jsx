@@ -80,8 +80,13 @@ export function ArrayFieldList({ field, value, onChange }) {
   }
 
   function addItem() {
-    onChange([...items, { ...buildDefault(field.item), hidden: false }])
+    // Prefer the schema-authored `emptyItem` (may deliberately differ from
+    // type-derived defaults) over buildDefault, which is just a fallback.
+    const empty = field.item.emptyItem ?? buildDefault(field.item)
+    onChange([...items, { ...empty, hidden: false }])
   }
+
+  const itemLabel = field.itemLabel ?? 'Mục'
 
   return (
     <div className="array-field">
@@ -89,7 +94,10 @@ export function ArrayFieldList({ field, value, onChange }) {
       {items.map((item, index) => (
         <div key={index} className={`array-item${item?.hidden ? ' is-hidden' : ''}`}>
           <div className="array-item-header">
-            <span>#{index + 1}</span>
+            <span>
+              {itemLabel} #{index + 1}
+              {item?.hidden && <span className="badge-hidden">Đã ẩn</span>}
+            </span>
             <label className="switch-inline">
               <input
                 type="checkbox"
@@ -110,7 +118,7 @@ export function ArrayFieldList({ field, value, onChange }) {
         </div>
       ))}
       <button type="button" onClick={addItem}>
-        + Thêm
+        + Thêm {itemLabel}
       </button>
     </div>
   )

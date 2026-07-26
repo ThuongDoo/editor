@@ -31,11 +31,16 @@ export default function ImageField({ value, onChange }) {
         <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} />
         {value && !uploading && (
           <button type="button" onClick={() => onChange('')}>
-            Xoá ảnh
+            🗑 Xoá ảnh
           </button>
         )}
       </div>
-      {uploading && <span className="save-status">Đang tải lên...</span>}
+      {uploading && (
+        <span className="status-inline">
+          <span className="spinner" aria-hidden="true" />
+          Đang tải lên...
+        </span>
+      )}
       {error && <span className="form-error">{error}</span>}
     </div>
   )
