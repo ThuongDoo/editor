@@ -10,7 +10,14 @@ import {
 import { useEffect, useState } from 'react'
 import { db } from './firebase'
 
+// `config` is now written as a native Firestore map (see saveWebsiteConfig)
+// so it's readable/editable as a proper nested map in the Firestore
+// console instead of an opaque JSON blob. Older docs still have it as a
+// JSON string — read tolerates both so those sites keep loading until
+// they're next saved (which upgrades them to the map form).
 function parseConfig(raw) {
+  if (raw == null) return {}
+  if (typeof raw !== 'string') return raw
   try {
     return JSON.parse(raw)
   } catch {
@@ -67,8 +74,7 @@ export function useWebsite(websiteId) {
   return { website, config, loading, error }
 }
 
+// Written as a native map, not a JSON string — see parseConfig above.
 export function saveWebsiteConfig(websiteId, config) {
-  return updateDoc(doc(db, 'websites', websiteId), {
-    config: JSON.stringify(config),
-  })
+  return updateDoc(doc(db, 'websites', websiteId), { config })
 }

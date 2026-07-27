@@ -15,12 +15,16 @@ every site they own.
 ```
 users/{uid}                doc: { role }
 templates/{templateId}     doc: { sectionOrder: [...], themes: {...}, schema: {...} }
-websites/{websiteId}       doc: { ownerId, templateId, config: "<JSON string>" }
+websites/{websiteId}       doc: { ownerId, templateId, config: {...} }
 ```
 
-`websites/{websiteId}.config` is unchanged from `template`: a JSON string,
-parsed on read and re-serialized on write (see
-[`src/lib/websites.js`](src/lib/websites.js)).
+`websites/{websiteId}.config` is written as a **native Firestore map**
+(so it's browsable/editable directly in the Firestore console, not an
+opaque JSON blob) — see [`src/lib/websites.js`](src/lib/websites.js).
+Older docs may still have `config` as a JSON string from before this
+change; `useWebsite`'s read tolerates both, and a site is upgraded to the
+map form the next time it's saved from the editor. `template`'s reader
+(`src/lib/content.js` in that repo) does the same tolerant read.
 
 `templates/{templateId}` is new. Unlike `websites/{id}.config`, its fields
 are **native Firestore values** (maps/arrays), not a JSON string — read
