@@ -11,6 +11,7 @@ const ERROR_MESSAGES = {
 export default function SignupPage() {
   const { user, loading: authLoading } = useAuthUser()
   const location = useLocation()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,7 +33,7 @@ export default function SignupPage() {
     setSubmitting(true)
     setError(null)
     try {
-      await signUp(email, password)
+      await signUp(email, password, name)
     } catch (err) {
       setError(ERROR_MESSAGES[err.code] ?? 'Không thể tạo tài khoản.')
     } finally {
@@ -50,6 +51,16 @@ export default function SignupPage() {
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Tạo tài khoản</h1>
           <p className="login-subtitle">Bắt đầu quản lý nội dung website của bạn</p>
+          <label>
+            Họ và tên
+            <input
+              type="text"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </label>
           <label>
             Email
             <input

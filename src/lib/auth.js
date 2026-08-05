@@ -8,6 +8,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updatePassword,
+  updateProfile,
 } from 'firebase/auth'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
@@ -37,10 +38,12 @@ export function signIn(email, password) {
 // Creates the auth user, writes the matching profile doc to `users/{uid}`,
 // and sends the verification email. ProtectedRoute keeps unverified users
 // out of the app until they follow the link (see components/ProtectedRoute).
-export async function signUp(email, password) {
+export async function signUp(email, password, name) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   await Promise.all([
+    updateProfile(user, { displayName: name }),
     setDoc(doc(db, 'users', user.uid), {
+      name,
       email: user.email,
       role: 'user',
       createdAt: serverTimestamp(),
