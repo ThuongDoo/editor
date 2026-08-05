@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
-import { signIn, useAuthUser } from '../lib/auth'
+import { signUp, useAuthUser } from '../lib/auth'
 
-export default function LoginPage() {
+const ERROR_MESSAGES = {
+  'auth/email-already-in-use': 'Email này đã được sử dụng.',
+  'auth/invalid-email': 'Email không hợp lệ.',
+  'auth/weak-password': 'Mật khẩu phải có ít nhất 6 ký tự.',
+}
+
+export default function SignupPage() {
   const { user, loading: authLoading } = useAuthUser()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -18,12 +25,16 @@ export default function LoginPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (password !== confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp.')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
-      await signIn(email, password)
-    } catch {
-      setError('Sai email hoặc mật khẩu.')
+      await signUp(email, password)
+    } catch (err) {
+      setError(ERROR_MESSAGES[err.code] ?? 'Không thể tạo tài khoản.')
     } finally {
       setSubmitting(false)
     }
@@ -37,8 +48,8 @@ export default function LoginPage() {
           Website Editor
         </span>
         <form className="login-form" onSubmit={handleSubmit}>
-          <h1>Đăng nhập</h1>
-          <p className="login-subtitle">Quản lý nội dung website của bạn</p>
+          <h1>Tạo tài khoản</h1>
+          <p className="login-subtitle">Bắt đầu quản lý nội dung website của bạn</p>
           <label>
             Email
             <input
@@ -53,21 +64,30 @@ export default function LoginPage() {
             Mật khẩu
             <input
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+          </label>
+          <label>
+            Xác nhận mật khẩu
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              minLength={6}
               required
             />
           </label>
           {error && <p className="form-error">{error}</p>}
           <button type="submit" disabled={submitting}>
-            {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {submitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
           </button>
           <p className="login-switch">
-            <Link to="/forgot-password">Quên mật khẩu?</Link>
-          </p>
-          <p className="login-switch">
-            Chưa có tài khoản? <Link to="/signup">Tạo tài khoản</Link>
+            Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
           </p>
         </form>
       </div>

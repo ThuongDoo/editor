@@ -17,9 +17,12 @@ export default function SitesListPage() {
           </span>
           <h1>Website của bạn</h1>
         </div>
-        <button type="button" onClick={signOutUser}>
-          Đăng xuất
-        </button>
+        <div className="page-header-actions">
+          <Link to="/change-password">Đổi mật khẩu</Link>
+          <button type="button" onClick={signOutUser}>
+            Đăng xuất
+          </button>
+        </div>
       </header>
 
       {loading && <Loading />}

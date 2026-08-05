@@ -1,10 +1,17 @@
 import {
+  createUserWithEmailAndPassword,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
 } from 'firebase/auth'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import { auth } from './firebase'
+import { auth, db } from './firebase'
 
 // Mirrors the { data, loading, error }-shaped hooks used for Firestore reads
 // elsewhere in this app (see lib/websites.js, lib/templates.js) and in
@@ -25,6 +32,50 @@ export function useAuthUser() {
 
 export function signIn(email, password) {
   return signInWithEmailAndPassword(auth, email, password)
+}
+
+// Creates the auth user, writes the matching profile doc to `users/{uid}`,
+// and sends the verification email. ProtectedRoute keeps unverified users
+// out of the app until they follow the link (see components/ProtectedRoute).
+export async function signUp(email, password) {
+  const { user } = await createUserWithEmailAndPassword(auth, email, password)
+  await Promise.all([
+    setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      role: 'user',
+      createdAt: serverTimestamp(),
+    }),
+    sendEmailVerification(user),
+  ])
+  return user
+}
+
+export function resendVerificationEmail() {
+  return sendEmailVerification(auth.currentUser)
+}
+
+// auth.currentUser.emailVerified doesn't update on its own after the user
+// clicks the email link — reload() re-fetches the account state from
+// Firebase so callers can re-check it.
+export async function refreshUser() {
+  await auth.currentUser?.reload()
+  return auth.currentUser
+}
+
+export function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email)
+}
+
+// Firebase requires a recent sign-in for sensitive changes like a password
+// update, so re-auth with the current password first (see
+// https://firebase.google.com/docs/auth/web/manage-users#re-authenticate).
+export async function changePassword(currentPassword, newPassword) {
+  const credential = EmailAuthProvider.credential(
+    auth.currentUser.email,
+    currentPassword,
+  )
+  await reauthenticateWithCredential(auth.currentUser, credential)
+  await updatePassword(auth.currentUser, newPassword)
 }
 
 export function signOutUser() {

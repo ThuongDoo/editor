@@ -31,6 +31,12 @@
   letter-spacing: 0.6px;
 }
 
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .login-page,
 .sites-list-page {
   max-width: 640px;
@@ -223,6 +229,22 @@ button[type='submit'],
 .form-error {
   color: var(--danger);
   font-size: 13px;
+}
+
+.form-success {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.login-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.login-switch a {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* Loading / status ---------------------------------------------------------- */
