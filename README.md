@@ -143,28 +143,45 @@ regular field in that item's card.
 
 ### Theme presets
 
-A template's schema doc may also declare a top-level `themes` map, sibling
-to `sectionOrder`/`schema`, independent of any one section:
+A template's `schema` map may declare a dedicated `theme` section — an
+ordinary object section (see above), conventionally with color-ish fields
+like `themePrimary`/`themeAccent`:
 
 ```json
 {
-  "themes": {
-    "themeA": {
-      "label": "Xanh dương",
-      "colors": { "primary": "#0EA5E9", "secondary": "#0284C7", "accent": "#38BDF8", "background": "#FFFFFF", "surface": "#F8FAFC" }
-    },
-    "themeB": { "label": "Đỏ", "colors": { "...": "..." } }
+  "schema": {
+    "theme": {
+      "label": "Chủ đề",
+      "fields": {
+        "themePrimary": { "type": "text", "label": "Màu Chính" },
+        "themeAccent": { "type": "text", "label": "Màu Phụ" }
+      }
+    }
   }
 }
 ```
 
-When present, the editor shows a pinned "Giao diện" tab (see
-[`ThemeEditor.jsx`](src/components/ThemeEditor.jsx)) ahead of the schema
-sections: clicking a preset card copies its `colors` into `config.theme`;
-each color also has its own picker for further customization. `config.theme`
-stores the **resolved** `{ preset, colors }` — the live site only ever needs
-to read `config.theme.colors`, it doesn't need to know about the template's
-preset list at all.
+The template's schema doc may also declare a top-level `themes` map, sibling
+to `sectionOrder`/`schema`, whose preset color keys match the `theme`
+section's field keys:
+
+```json
+{
+  "themes": {
+    "themeA": { "label": "Đỏ", "colors": { "themePrimary": "#000000", "themeAccent": "#111111" } },
+    "themeB": { "label": "Xanh", "colors": { "themePrimary": "#0284c7", "themeAccent": "#0891b2" } }
+  }
+}
+```
+
+`schemaAdapter.findColorFields` sources its color-field list from this
+`theme` section (falling back to scanning every section for explicit
+`color`-type fields, for templates predating this convention). `SchemaForm`
+special-cases the `theme` section's tab to render
+[`ThemeEditor.jsx`](src/components/ThemeEditor.jsx) instead of the generic
+object form: clicking a preset card copies its `colors` into `config.theme`
+(matched up by field key); each color also has its own picker for further,
+fully custom tuning beyond the presets.
 
 ### Array items: hide vs. delete
 

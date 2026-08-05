@@ -91,10 +91,11 @@ export function normalizeSchema(raw) {
 }
 
 // Optional top-level `themes` map — named color presets a website can start
-// from (see ThemeEditor.jsx): { [presetId]: { label, colors: { primary,
-// secondary, accent, background, surface } } }. Site-wide, unrelated to any
-// one section, so normalized separately from normalizeSchema. Absent in
-// templates authored before this existed — callers get `[]`.
+// from (see ThemeEditor.jsx): { [presetId]: { label, colors: { [colorFieldKey]:
+// value } } }. Color keys are whatever the template's own color fields are
+// named (see findColorFields below), not a fixed set. Site-wide, unrelated
+// to any one section, so normalized separately from normalizeSchema. Absent
+// in templates authored before this existed — callers get `[]`.
 export function normalizeThemes(raw) {
   const themesMap = raw?.themes
   if (!themesMap || typeof themesMap !== 'object') return []
@@ -104,4 +105,36 @@ export function normalizeThemes(raw) {
     label: theme.label ?? id,
     colors: theme.colors ?? {},
   }))
+}
+
+// Site-wide color fields, sourced from the schema's own dedicated `theme`
+// section (e.g. its `themePrimary`/`themeAccent` fields) — these are what
+// the "Chủ đề" tab's presets and pickers write to (see ThemeEditor.jsx).
+// Every field on that section is treated as a color picker regardless of
+// its authored `type` (a template may declare them as plain TEXT since
+// that's just how it stores a hex string), keyed by whatever field keys the
+// template author chose rather than a fixed set, since different templates
+// name their theme colors differently.
+//
+// Falls back to scanning every object section for explicit `color`-type
+// fields, for templates authored before a dedicated `theme` section
+// existed. Only a section's own top-level fields count — colors nested
+// inside an array item are per-item, not site-wide.
+export function findColorFields(sections) {
+  const themeSection = sections.find((s) => s.id === 'theme' && s.type === 'object')
+  if (themeSection) {
+    return themeSection.fields.map((f) => ({
+      sectionId: themeSection.id,
+      key: f.key,
+      label: f.label ?? f.key,
+    }))
+  }
+
+  return sections.flatMap((section) =>
+    section.type === 'object'
+      ? section.fields
+          .filter((f) => f.type === 'color')
+          .map((f) => ({ sectionId: section.id, key: f.key, label: f.label ?? f.key }))
+      : [],
+  )
 }

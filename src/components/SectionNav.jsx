@@ -1,8 +1,8 @@
 import { hasVisibleToggle } from '../lib/sectionVisibility'
-import { THEME_TAB_ID } from '../lib/tabs'
 
 const ICONS = {
   brand: '🎨',
+  theme: '🌈',
   hero: '🖼️',
   stats: '📊',
   services: '💉',
@@ -18,29 +18,9 @@ const ICONS = {
   visible: '👁️',
 }
 
-export default function SectionNav({
-  sections,
-  activeId,
-  onSelect,
-  isSectionVisible,
-  onToggleVisible,
-  showThemeTab,
-}) {
+export default function SectionNav({ sections, activeId, onSelect, isSectionVisible, onToggleVisible }) {
   return (
     <nav className="section-nav">
-      {showThemeTab && (
-        <div className="section-nav-item">
-          <button
-            type="button"
-            className={activeId === THEME_TAB_ID ? 'is-active' : ''}
-            onClick={() => onSelect(THEME_TAB_ID)}
-          >
-            <span aria-hidden="true">🌈</span>
-            Giao diện
-          </button>
-        </div>
-      )}
-
       {sections.map((section) => {
         const visible = isSectionVisible(section.id)
         return (

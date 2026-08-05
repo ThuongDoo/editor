@@ -1,28 +1,38 @@
 import FieldInput from './FieldInput'
 
-const COLOR_FIELDS = [
-  { key: 'primary', label: 'Màu chính' },
-  { key: 'secondary', label: 'Màu phụ' },
-  { key: 'accent', label: 'Màu nhấn' },
-  { key: 'background', label: 'Nền' },
-  { key: 'surface', label: 'Bề mặt' },
-]
-
-// Site-wide color theme: pick one of the template's named presets as a
-// starting point (see lib/schemaAdapter.js normalizeThemes), then fine-tune
-// individual colors. `value` is `config.theme` — `{ preset, colors }` — and
-// stores the *resolved* color values (not just a preset id), so the live
-// site can render `config.theme.colors` directly without knowing anything
-// about the editor's preset list.
-export default function ThemeEditor({ themes, value, onChange }) {
-  const colors = value?.colors ?? {}
-
-  function applyPreset(preset) {
-    onChange({ preset: preset.id, colors: { ...preset.colors } })
+// Site-wide color theme: pick one of the template's named presets (see
+// lib/schemaAdapter.js normalizeThemes) to fill in every declared color
+// field at once, or fine-tune each one individually. `colorFields` is the
+// flat list of { sectionId, key, label } discovered from the template's own
+// schema (schemaAdapter.findColorFields) — ordinarily every field of the
+// schema's dedicated `theme` section, so `sectionId` is 'theme' for all of
+// them. `value`/`onChange` are the whole website config rather than a
+// scoped slice, since older templates without a dedicated `theme` section
+// may still have color fields scattered across other sections.
+export default function ThemeEditor({ themes, colorFields, value, onChange }) {
+  function colorValue(field) {
+    return value[field.sectionId]?.[field.key]
   }
 
-  function setColor(key, colorValue) {
-    onChange({ ...value, colors: { ...colors, [key]: colorValue } })
+  function setColor(field, newColor) {
+    onChange({
+      ...value,
+      [field.sectionId]: { ...value[field.sectionId], [field.key]: newColor },
+    })
+  }
+
+  function isPresetActive(preset) {
+    const relevant = colorFields.filter((f) => preset.colors[f.key] !== undefined)
+    return relevant.length > 0 && relevant.every((f) => colorValue(f) === preset.colors[f.key])
+  }
+
+  function applyPreset(preset) {
+    const next = { ...value }
+    for (const field of colorFields) {
+      if (preset.colors[field.key] === undefined) continue
+      next[field.sectionId] = { ...next[field.sectionId], [field.key]: preset.colors[field.key] }
+    }
+    onChange(next)
   }
 
   return (
@@ -35,7 +45,7 @@ export default function ThemeEditor({ themes, value, onChange }) {
               <button
                 key={preset.id}
                 type="button"
-                className={`theme-preset-card${value?.preset === preset.id ? ' is-active' : ''}`}
+                className={`theme-preset-card${isPresetActive(preset) ? ' is-active' : ''}`}
                 onClick={() => applyPreset(preset)}
               >
                 <span className="theme-preset-swatches">
@@ -52,13 +62,13 @@ export default function ThemeEditor({ themes, value, onChange }) {
 
       <fieldset className="field-group">
         <legend>Tuỳ chỉnh màu</legend>
-        {COLOR_FIELDS.map((f) => (
-          <label key={f.key} className="schema-form-row">
+        {colorFields.map((f) => (
+          <label key={`${f.sectionId}.${f.key}`} className="schema-form-row">
             <span className="schema-form-label">{f.label}</span>
             <FieldInput
               field={{ type: 'color', label: f.label }}
-              value={colors[f.key]}
-              onChange={(v) => setColor(f.key, v)}
+              value={colorValue(f)}
+              onChange={(v) => setColor(f, v)}
             />
           </label>
         ))}
