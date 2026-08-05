@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { findColorFields } from '../lib/schemaAdapter'
-import { hasVisibleToggle } from '../lib/sectionVisibility'
+import { hasVisibleToggle, isSectionVisible, setSectionVisible } from '../lib/sectionVisibility'
 import { ArrayFieldList, ObjectFieldGroup } from './SchemaFields'
 import SectionNav from './SectionNav'
 import ThemeEditor from './ThemeEditor'
@@ -25,8 +25,7 @@ export default function SchemaForm({ sections, themes, value, onChange }) {
   const setSectionValue = (v) => onChange({ ...value, [activeSection.id]: v })
 
   function toggleSectionVisible(sectionId) {
-    const current = value[sectionId] ?? {}
-    onChange({ ...value, [sectionId]: { ...current, visible: !(current.visible ?? true) } })
+    onChange(setSectionVisible(value, sectionId, !isSectionVisible(value, sectionId)))
   }
 
   // The `visible` field is rendered as the nav eye icon, not again here.
@@ -41,7 +40,7 @@ export default function SchemaForm({ sections, themes, value, onChange }) {
         sections={sections}
         activeId={activeSection.id}
         onSelect={setActiveId}
-        isSectionVisible={(id) => value[id]?.visible ?? true}
+        isSectionVisible={(id) => isSectionVisible(value, id)}
         onToggleVisible={toggleSectionVisible}
       />
       <div className="schema-form-panel">

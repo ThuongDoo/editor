@@ -131,15 +131,24 @@ create/edit it directly in the Firebase console for each templateId a
 
 ### Section visibility
 
-A section's own `fields` may include a `visible` (`boolean`) entry — when
-present, the editor pulls it out of the form body and renders it as an eye
-icon (👁️/🙈) next to that section's name in the sidebar instead
-([`lib/sectionVisibility.js`](src/lib/sectionVisibility.js) detects this,
-[`SectionNav.jsx`](src/components/SectionNav.jsx) renders it). Missing a
-value defaults to visible. This only applies to object-shaped sections — a
-pure array section's `visible` field (if it declares one, like `stats`)
-describes a property of each *item*, not the section, so it's left as a
-regular field in that item's card.
+An object section's own `fields` may include a `visible` (`boolean`) entry
+— when present, the editor pulls it out of the form body and renders it as
+an eye icon (👁️/🙈) next to that section's name in the sidebar instead
+([`lib/sectionVisibility.js`](src/lib/sectionVisibility.js)'s
+`hasVisibleToggle` detects this, [`SectionNav.jsx`](src/components/SectionNav.jsx)
+renders it). This only applies to object-shaped sections — a pure array
+section has no section-level `fields` of its own (see above), so it can't
+declare one; give it a sibling `items` block instead (turning it into a
+mixed section) if it needs to be hideable as a whole.
+
+The toggle's actual value lives in a single site-wide `config.visible.<sectionId>`
+map — **not** `config.<sectionId>.visible` — because that's the contract
+every live site built from this template's config actually reads (e.g.
+`data.visible?.hero` in `template`'s page component), and what `admin`'s
+`createWebsite` seeds a new site's `config.visible` from
+(`defaultData.visible` on the template doc). `sectionVisibility.js`'s
+`isSectionVisible`/`setSectionVisible` are the one read/write path for this
+— missing an entry defaults to visible.
 
 ### Theme presets
 
