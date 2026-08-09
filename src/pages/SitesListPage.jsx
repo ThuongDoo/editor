@@ -34,7 +34,14 @@ export default function SitesListPage() {
       <ul className="sites-list">
         {websites.map((site) => (
           <li key={site.id}>
-            <Link to={`/edit/${site.id}`}>{site.id}</Link>
+            <Link to={`/edit/${site.id}`}>
+              <span className="site-link-info">
+                <span className="site-link-id">{site.id}</span>
+                {site.templateId && (
+                  <span className="site-link-template">Template: {site.templateId}</span>
+                )}
+              </span>
+            </Link>
           </li>
         ))}
       </ul>

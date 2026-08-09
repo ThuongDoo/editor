@@ -342,6 +342,18 @@ button[type='submit'],
   }
 }
 
+.site-link-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-link-template {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+}
+
 /* Editor: section nav + panel ------------------------------------------------ */
 
 .schema-form {
