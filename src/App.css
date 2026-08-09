@@ -31,6 +31,17 @@
   letter-spacing: 0.6px;
 }
 
+.page-header-user {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.page-header-user-id {
+  color: var(--text);
+  opacity: 0.7;
+}
+
 .page-header-actions {
   display: flex;
   align-items: center;
@@ -346,6 +357,28 @@ button[type='submit'],
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.site-link-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.site-link-id:hover,
+.site-link-id:focus-visible {
+  text-decoration: underline;
+}
+
+.copied-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 1px 8px;
+  border-radius: 999px;
 }
 
 .site-link-template {
