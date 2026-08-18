@@ -1,23 +1,5 @@
 import { hasVisibleToggle } from '../lib/sectionVisibility'
 
-const ICONS = {
-  brand: '🎨',
-  theme: '🌈',
-  hero: '🖼️',
-  stats: '📊',
-  services: '💉',
-  doctors: '🩺',
-  spaServices: '🧖',
-  process: '🧭',
-  branches: '📍',
-  results: '✨',
-  map: '🗺️',
-  cta: '📣',
-  footer: '📄',
-  promo: '🎁',
-  visible: '👁️',
-}
-
 export default function SectionNav({ sections, activeId, onSelect, isSectionVisible, onToggleVisible }) {
   return (
     <nav className="section-nav">
@@ -30,7 +12,6 @@ export default function SectionNav({ sections, activeId, onSelect, isSectionVisi
               className={section.id === activeId ? 'is-active' : ''}
               onClick={() => onSelect(section.id)}
             >
-              <span aria-hidden="true">{ICONS[section.id] ?? '•'}</span>
               {section.label ?? section.id}
             </button>
             {hasVisibleToggle(section) && (

@@ -18,6 +18,7 @@ export default function EditorPage() {
     loading: schemaLoading,
     error: schemaError,
   } = useTemplateSchema(website?.templateId);
+  console.log("sections", sections);
 
   const [draft, setDraft] = useState(null);
   // The last-saved value, used to compute dirtiness. Starts as `config` once
@@ -74,7 +75,12 @@ export default function EditorPage() {
           <Link to="/">&larr; Danh sách website</Link>
         </header>
 
-        <SchemaForm sections={sections} themes={themes} value={draft} onChange={setDraft} />
+        <SchemaForm
+          sections={sections}
+          themes={themes}
+          value={draft}
+          onChange={setDraft}
+        />
 
         <div className="editor-actions">
           <button

@@ -14,11 +14,23 @@ function normalizeType(type) {
   return (type ?? 'text').toLowerCase()
 }
 
-function normalizeFieldsMap(fieldsMap = {}) {
-  return Object.entries(fieldsMap).map(([key, spec]) => ({
+// `fieldsMap`'s own key order isn't reliable (same reason `sectionOrder`
+// exists for the top-level schema map — see README.md) — Firestore doesn't
+// guarantee a map field's key order survives the round trip. `fieldOrder`,
+// an optional sibling array of keys, is the explicit override; keys it
+// doesn't mention fall back to appearing after the ordered ones (in
+// whatever order the map itself came back in), so nothing authored is
+// silently dropped just because it's missing from `fieldOrder`.
+function normalizeFieldsMap(fieldsMap = {}, fieldOrder) {
+  const keys = Object.keys(fieldsMap)
+  const orderedKeys = Array.isArray(fieldOrder)
+    ? [...fieldOrder.filter((key) => keys.includes(key)), ...keys.filter((key) => !fieldOrder.includes(key))]
+    : keys
+
+  return orderedKeys.map((key) => ({
     key,
-    label: spec.label,
-    type: normalizeType(spec.type),
+    label: fieldsMap[key].label,
+    type: normalizeType(fieldsMap[key].type),
   }))
 }
 
@@ -30,7 +42,7 @@ function normalizeArraySpec(defaultKey, spec) {
     type: 'array',
     item: {
       type: 'object',
-      fields: normalizeFieldsMap(spec.fields),
+      fields: normalizeFieldsMap(spec.fields, spec.fieldOrder),
       emptyItem: spec.emptyItem,
     },
   }
@@ -54,13 +66,13 @@ function buildSectionDescriptor(sectionId, section) {
       type: 'array',
       item: {
         type: 'object',
-        fields: normalizeFieldsMap(section.fields),
+        fields: normalizeFieldsMap(section.fields, section.fieldOrder),
         emptyItem: section.emptyItem,
       },
     }
   }
 
-  const fields = normalizeFieldsMap(section.fields)
+  const fields = normalizeFieldsMap(section.fields, section.fieldOrder)
   if (section.items) {
     fields.push(normalizeArraySpec('items', section.items))
   }

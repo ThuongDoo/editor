@@ -41,6 +41,14 @@ Three separate top-level fields on the doc:
   the ordered ones — nothing gets silently dropped. Without it, tab order
   falls back to `schema`'s own key order (what the Spa Clinic example below
   uses — it predates `sectionOrder`).
+
+For the same reason, a section's own `fields` (and an `items` block's
+`fields`) may declare a sibling `fieldOrder` — an array of field keys
+controlling display order within that section/item, since `fields`' own map
+key order is just as unreliable as `schema`'s. Any key present in `fields`
+but missing from `fieldOrder` still shows up, appended after the ordered
+ones. Without `fieldOrder`, field order falls back to `fields`' own
+(unreliable) key order.
 - **`themes`** (optional) — named color presets; see
   [Theme presets](#theme-presets) below.
 
@@ -59,7 +67,8 @@ Authored shape of the `schema` map itself:
       "themePrimary": { "type": "color", "label": "Màu chính" },
       "logo": { "type": "image", "label": "Logo" },
       "name": { "type": "text", "label": "Tên thương hiệu" }
-    }
+    },
+    "fieldOrder": ["logo", "name", "themePrimary"]
   },
   "stats": {
     "label": "Số liệu thống kê",
