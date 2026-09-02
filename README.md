@@ -16,7 +16,15 @@ every site they own.
 users/{uid}                doc: { role }
 templates/{templateId}     doc: { sectionOrder: [...], themes: {...}, schema: {...} }
 websites/{websiteId}       doc: { ownerId, templateId, config: {...} }
+domains/{websiteId}        doc: { domain, websiteId, status, notes, createdAt, updatedAt }
 ```
+
+`domains/{websiteId}` holds the custom domain for a site, if one has been
+set — the doc id mirrors the website id (one domain per site), so it's read
+and written directly by id with no query, from
+[`src/lib/domains.js`](src/lib/domains.js). Edited via the small modal next
+to the website id on the editor page
+([`src/components/DomainEditModal.jsx`](src/components/DomainEditModal.jsx)).
 
 `websites/{websiteId}.config` is written as a **native Firestore map**
 (so it's browsable/editable directly in the Firestore console, not an
@@ -244,7 +252,11 @@ store the resulting download URL in `config` like any other field value.
 ## Firebase security rules
 
 [`firestore.rules`](firestore.rules) gates Firestore writes: only a
-website's owner may update its `config` field, and only that field.
+website's owner may update its `config` field, and only that field. The
+`domains` collection needs the same treatment — only the owner of the
+matching `websites/{websiteId}` doc should be able to write
+`domains/{websiteId}` — but since this rules file isn't committed here (see
+below), that has to be added by hand wherever the live rules are managed.
 [`storage.rules`](storage.rules) mirrors this for uploaded images, checking
 the same ownership via `firestore.get()` from within Storage rules. Both
 keep **reads** public (`allow read: if true`) because `template`'s live

@@ -160,7 +160,8 @@
 }
 
 input,
-textarea {
+textarea,
+select {
   font: inherit;
   font-weight: 400;
   padding: 10px 12px;
@@ -174,7 +175,8 @@ textarea {
 }
 
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-bg);
@@ -392,6 +394,145 @@ button[type='submit'],
 
 .site-link-template {
   font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* Domain badge ------------------------------------------------------------------ */
+
+.domain-badge,
+.domain-add-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.domain-badge {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.domain-add-btn {
+  border-style: dashed;
+  color: var(--text);
+}
+
+/* Modal ------------------------------------------------------------------ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header h2 {
+  font-size: 16px;
+}
+
+.modal-close {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.domain-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.domain-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.domain-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.domain-input-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.domain-input-suffix {
+  color: var(--text);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.domain-check-btn {
+  flex: none;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.modal-actions button:last-child {
+  margin-left: auto;
+}
+
+.domain-warning {
+  font-size: 13px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.domain-form label.domain-confirm {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--text);
 }
