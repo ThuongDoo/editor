@@ -92,6 +92,45 @@ export function useWebsiteDomain(websiteId) {
   return { domain, loading, error, setDomain };
 }
 
+// Domains for many sites at once, keyed by websiteId — for the dashboard
+// card grid, so it doesn't do one getDoc per site. Firestore's `in` filter
+// caps at 30 values, so this chunks; a single owner isn't expected to have
+// more than a handful of sites, but it stays correct either way.
+export function useWebsiteDomains(websiteIds) {
+  const key = websiteIds.join(",")
+  const [domainsById, setDomainsById] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!websiteIds.length) return
+    const chunks = []
+    for (let i = 0; i < websiteIds.length; i += 30) {
+      chunks.push(websiteIds.slice(i, i + 30))
+    }
+    Promise.all(
+      chunks.map((chunk) =>
+        getDocs(
+          query(collection(db, "domains"), where("websiteId", "in", chunk)),
+        ),
+      ),
+    )
+      .then((snapshots) => {
+        const byId = {}
+        for (const snapshot of snapshots) {
+          for (const d of snapshot.docs) {
+            byId[d.id] = { id: d.id, ...d.data() }
+          }
+        }
+        setDomainsById(byId)
+      })
+      .catch(() => setDomainsById({}))
+      .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return { domainsById, loading }
+}
+
 export function saveWebsiteDomain(websiteId, { domain, status, notes }, isNew) {
   const payload = {
     domain: domain.trim(),
