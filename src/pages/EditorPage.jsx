@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import DomainEditModal from "../components/DomainEditModal";
 import Loading from "../components/Loading";
 import SchemaForm from "../components/SchemaForm";
+import SupportMenu from "../components/SupportMenu";
 import { useAuthUser } from "../lib/auth";
 import { useWebsiteDomain } from "../lib/domains";
 import { EditorContext } from "../lib/editorContext";
@@ -123,6 +124,8 @@ export default function EditorPage() {
             <span className="form-error">Lưu thất bại, thử lại.</span>
           )}
         </div>
+
+        <SupportMenu websiteId={websiteId} userId={user?.uid} />
       </main>
     </EditorContext.Provider>
   );

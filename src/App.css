@@ -537,6 +537,253 @@ button[type='submit'],
   color: var(--text);
 }
 
+/* Support ------------------------------------------------------------------ */
+
+.support-menu {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.support-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+
+.support-fab {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  border-color: transparent;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: var(--accent-gradient);
+  color: var(--accent-contrast);
+  box-shadow: var(--shadow-md);
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.support-menu-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.support-menu-popover button {
+  justify-content: flex-start;
+  text-align: left;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2);
+    box-shadow: none;
+  }
+}
+
+.support-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.support-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.support-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.support-image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.support-image-grid img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.support-image-item {
+  position: relative;
+}
+
+.support-image-item button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border-color: var(--danger-bg);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 11px;
+}
+
+.support-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.support-list-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-weight: 400;
+  text-align: left;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.support-list-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.support-list-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.support-list-item-id {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.support-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.support-status-pending {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.support-status-in_progress {
+  background: rgba(236, 72, 153, 0.12);
+  color: var(--accent-2);
+}
+
+.support-status-resolved {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success);
+}
+
+.support-status-rejected {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.support-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.support-detail-content {
+  font-size: 14px;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
+.support-thread {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.support-message {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  max-width: 85%;
+}
+
+.support-message-admin {
+  align-self: flex-start;
+}
+
+.support-message-user {
+  align-self: flex-end;
+  background: var(--accent-bg);
+}
+
+.support-message-author {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.support-message p {
+  font-size: 13px;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
 /* Editor: section nav + panel ------------------------------------------------ */
 
 .schema-form {
