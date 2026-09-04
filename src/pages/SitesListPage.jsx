@@ -27,15 +27,16 @@ export default function SitesListPage() {
     )
   }, [websites, search, domainsById])
 
-  // Bấm vào web id chỉ copy, không điều hướng — chặn hành vi mặc định của
-  // <Link> bao ngoài bằng preventDefault/stopPropagation trên chính span này.
-  async function copyWebsiteId(e, id) {
+  // Dùng chung cho web id (trong thẻ, bấm chỉ copy không điều hướng — chặn
+  // hành vi mặc định của <Link> bao ngoài bằng preventDefault/stopPropagation
+  // trên chính span này) và UID tài khoản ở header.
+  async function copyText(e, text) {
     e.preventDefault()
     e.stopPropagation()
     try {
-      await navigator.clipboard.writeText(id)
-      setCopiedId(id)
-      setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500)
+      await navigator.clipboard.writeText(text)
+      setCopiedId(text)
+      setTimeout(() => setCopiedId((current) => (current === text ? null : current)), 1500)
     } catch {
       // Clipboard API không khả dụng (context không an toàn, trình duyệt cũ...) — bỏ qua.
     }
@@ -53,7 +54,20 @@ export default function SitesListPage() {
           {user && (
             <p className="page-header-user">
               {user.displayName ?? user.email}
-              <span className="page-header-user-id"> · UID: {user.uid}</span>
+              {' · UID: '}
+              <span
+                className="page-header-user-id"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => copyText(e, user.uid)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') copyText(e, user.uid)
+                }}
+                title="Bấm để copy UID"
+              >
+                {user.uid}
+              </span>
+              {copiedId === user.uid && <span className="copied-badge">Đã copy!</span>}
             </p>
           )}
         </div>
@@ -130,9 +144,9 @@ export default function SitesListPage() {
                             className="site-link-id"
                             role="button"
                             tabIndex={0}
-                            onClick={(e) => copyWebsiteId(e, site.id)}
+                            onClick={(e) => copyText(e, site.id)}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') copyWebsiteId(e, site.id)
+                              if (e.key === 'Enter' || e.key === ' ') copyText(e, site.id)
                             }}
                             title="Bấm để copy website id"
                           >

@@ -65,6 +65,9 @@ function inferArraySpec(items, warnings, path) {
   if (primitiveItems.length > 0) {
     warnings.push(`Mảng "${path}" lẫn cả object và giá trị đơn giản — chỉ suy field từ các item dạng object, bỏ qua các item còn lại.`)
   }
+  // Field order across items follows first-appearance order (the same order
+  // an admin scanning the sample array top to bottom would read them in),
+  // since `fields` is a plain object and insertion order is preserved.
   const fields = {}
   for (const item of objectItems) {
     for (const [key, value] of Object.entries(item)) {
@@ -72,22 +75,30 @@ function inferArraySpec(items, warnings, path) {
       if (!(key in fields)) fields[key] = inferFieldSpec(key, value, warnings, `${path}[].${key}`)
     }
   }
-  return { fields, emptyItem: Object.fromEntries(Object.keys(fields).map((k) => [k, emptyValueFor(fields[k])])) }
+  return {
+    fields,
+    fieldOrder: Object.keys(fields),
+    emptyItem: Object.fromEntries(Object.keys(fields).map((k) => [k, emptyValueFor(fields[k])])),
+  }
 }
 
 function inferFieldSpec(key, value, warnings, path) {
   if (Array.isArray(value)) {
-    const { fields, of, emptyItem } = inferArraySpec(value, warnings, path)
+    const { fields, of, emptyItem, fieldOrder } = inferArraySpec(value, warnings, path)
     return of !== undefined
       ? { type: 'array', label: key, itemLabel: key, of, emptyItem }
-      : { type: 'array', label: key, itemLabel: key, fields, emptyItem }
+      : { type: 'array', label: key, itemLabel: key, fields, emptyItem, fieldOrder }
   }
   if (isPlainObject(value)) {
+    // Own key order of the sample object — see docs/schema-rules.md's
+    // `fieldOrder` (sibling of `fields`, kept alongside it at every nesting
+    // level since a Firestore map field's key order isn't guaranteed to
+    // survive the round trip, unlike this in-memory draft).
     const fields = {}
     for (const [k, v] of Object.entries(value)) {
       fields[k] = inferFieldSpec(k, v, warnings, `${path}.${k}`)
     }
-    return { type: 'object', label: key, fields }
+    return { type: 'object', label: key, fields, fieldOrder: Object.keys(fields) }
   }
   return { type: inferLeafType(value), label: key }
 }
@@ -138,8 +149,15 @@ export function inferTemplateFromConfig(config) {
       spec.type === 'array'
         ? spec.of !== undefined
           ? { type: 'array', label: spec.label, itemLabel: spec.itemLabel, of: spec.of, emptyItem: spec.emptyItem }
-          : { type: 'array', label: spec.label, itemLabel: spec.itemLabel, fields: spec.fields, emptyItem: spec.emptyItem }
-        : { type: 'object', label: spec.label, fields: spec.fields }
+          : {
+              type: 'array',
+              label: spec.label,
+              itemLabel: spec.itemLabel,
+              fields: spec.fields,
+              emptyItem: spec.emptyItem,
+              fieldOrder: spec.fieldOrder,
+            }
+        : { type: 'object', label: spec.label, fields: spec.fields, fieldOrder: spec.fieldOrder }
     sectionOrder.push(sectionId)
   }
 
