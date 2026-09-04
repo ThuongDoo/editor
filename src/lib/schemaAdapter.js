@@ -21,22 +21,40 @@ function normalizeType(type) {
 // doesn't mention fall back to appearing after the ordered ones (in
 // whatever order the map itself came back in), so nothing authored is
 // silently dropped just because it's missing from `fieldOrder`.
+//
+// Recurses for `object`/`array` field types, so a field can itself declare
+// nested `fields` (object) or `fields`/`itemLabel`/`emptyItem` (array) to
+// any depth — see docs/schema-rules.md. This is what lets an array field
+// live anywhere inside `fields` (e.g. `services.items`) instead of only as
+// the one special sibling `items` key handled below.
 function normalizeFieldsMap(fieldsMap = {}, fieldOrder) {
   const keys = Object.keys(fieldsMap)
   const orderedKeys = Array.isArray(fieldOrder)
     ? [...fieldOrder.filter((key) => keys.includes(key)), ...keys.filter((key) => !fieldOrder.includes(key))]
     : keys
 
-  return orderedKeys.map((key) => ({
-    key,
-    label: fieldsMap[key].label,
-    type: normalizeType(fieldsMap[key].type),
-  }))
+  return orderedKeys.map((key) => normalizeFieldSpec(key, fieldsMap[key]))
 }
 
-function normalizeArraySpec(defaultKey, spec) {
+function normalizeFieldSpec(key, spec) {
+  const type = normalizeType(spec.type)
+  if (type === 'object') return buildObjectFieldDescriptor(key, spec)
+  if (type === 'array') return buildArrayFieldDescriptor(key, spec)
+  return { key, label: spec.label, type }
+}
+
+function buildObjectFieldDescriptor(key, spec) {
   return {
-    key: spec.key ?? defaultKey,
+    key,
+    label: spec.label,
+    type: 'object',
+    fields: normalizeFieldsMap(spec.fields, spec.fieldOrder),
+  }
+}
+
+function buildArrayFieldDescriptor(key, spec) {
+  return {
+    key,
     label: spec.label,
     itemLabel: spec.itemLabel,
     type: 'array',
@@ -48,17 +66,23 @@ function normalizeArraySpec(defaultKey, spec) {
   }
 }
 
-// A section is "pure array" when its own `fields` describe one repeatable
-// item (not the section's own properties) — signaled by `itemLabel`/
-// `emptyItem` living directly on the section, with no separate `items`
-// sub-key (e.g. `stats`, vs. `services` which has both plain `fields` and a
-// nested `items` array).
+// Legacy (pre-`type`) heuristic: a section with no explicit `type` is "pure
+// array" when its own `fields` describe one repeatable item (not the
+// section's own properties) — signaled by `itemLabel`/`emptyItem` living
+// directly on the section, with no separate `items` sub-key (e.g. `stats`,
+// vs. `services` which has both plain `fields` and a nested `items` array).
+// Superseded by declaring `"type": "array"` on the section (see
+// docs/schema-rules.md); kept so schemas authored before `type` was
+// required keep working.
 function isPureArraySection(section) {
   return (section.itemLabel !== undefined || section.emptyItem !== undefined) && !section.items
 }
 
 function buildSectionDescriptor(sectionId, section) {
-  if (isPureArraySection(section)) {
+  const sectionType = section.type ? normalizeType(section.type) : null
+  const isArraySection = sectionType ? sectionType === 'array' : isPureArraySection(section)
+
+  if (isArraySection) {
     return {
       id: sectionId,
       label: section.label,
@@ -73,8 +97,13 @@ function buildSectionDescriptor(sectionId, section) {
   }
 
   const fields = normalizeFieldsMap(section.fields, section.fieldOrder)
-  if (section.items) {
-    fields.push(normalizeArraySpec('items', section.items))
+  // Legacy (pre-`type`) authored shape: a sibling `items` block turns an
+  // object section into a "mixed" section. Superseded by declaring a field
+  // with its own `"type": "array"` inside `fields` instead (see
+  // docs/schema-rules.md); only applied when the section has no explicit
+  // `type`, so new-format schemas must put arrays inside `fields`.
+  if (!sectionType && section.items) {
+    fields.push(buildArrayFieldDescriptor(section.items.key ?? 'items', section.items))
   }
   return { id: sectionId, label: section.label, type: 'object', fields }
 }

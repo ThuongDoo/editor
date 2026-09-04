@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Loading from '../components/Loading'
-import { signOutUser, useAuthUser } from '../lib/auth'
+import { signOutUser, useAuthUser, useUserRole } from '../lib/auth'
 import { useOwnedWebsites } from '../lib/websites'
 
 export default function SitesListPage() {
   const { user } = useAuthUser()
   const { websites, loading, error } = useOwnedWebsites(user?.uid)
+  const { role } = useUserRole(user?.uid)
   const [copiedId, setCopiedId] = useState(null)
 
   // Bấm vào web id chỉ copy, không điều hướng — chặn hành vi mặc định của
@@ -40,6 +41,7 @@ export default function SitesListPage() {
           )}
         </div>
         <div className="page-header-actions">
+          {role === 'admin' && <Link to="/templates/new">+ Tạo template mới</Link>}
           <Link to="/change-password">Đổi mật khẩu</Link>
           <button type="button" onClick={signOutUser}>
             Đăng xuất

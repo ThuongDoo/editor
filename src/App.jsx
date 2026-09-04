@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import ChangePasswordPage from './pages/ChangePasswordPage'
+import CreateTemplatePage from './pages/CreateTemplatePage'
 import EditorPage from './pages/EditorPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LoginPage from './pages/LoginPage'
@@ -37,6 +38,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <EditorPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/templates/new"
+        element={
+          <ProtectedRoute adminOnly>
+            <CreateTemplatePage />
           </ProtectedRoute>
         }
       />

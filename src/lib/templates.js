@@ -1,4 +1,4 @@
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "./firebase";
 import { normalizeSchema, normalizeThemes } from "./schemaAdapter";
@@ -36,4 +36,21 @@ export function useTemplateSchema(templateId) {
   }, [templateId]);
 
   return { sections, themes, loading, error };
+}
+
+// Used by CreateTemplatePage before writing, to warn instead of silently
+// overwriting an existing templateId (there's no undo for a `setDoc`).
+export async function templateExists(templateId) {
+  const snapshot = await getDoc(doc(db, "templates", templateId));
+  return snapshot.exists();
+}
+
+// `data` is the full authored doc shape — { schema, sectionOrder, themes,
+// defaultData } — written as-is (native Firestore map/array, not a JSON
+// string), same convention as the rest of `templates/{templateId}`. `setDoc`
+// (not `updateDoc`) because the doc doesn't exist yet for a brand new
+// template, and overwrites in place when the admin deliberately confirms
+// reusing an existing templateId.
+export function createTemplate(templateId, data) {
+  return setDoc(doc(db, "templates", templateId), data);
 }

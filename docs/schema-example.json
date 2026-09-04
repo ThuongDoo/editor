@@ -1,0 +1,100 @@
+{
+  "sectionOrder": ["theme", "brand", "hero", "stats", "services", "doctors", "visible"],
+  "schema": {
+    "theme": {
+      "type": "object",
+      "label": "Chủ đề",
+      "fields": {
+        "themePrimary": { "type": "color", "label": "Màu chính" },
+        "themeAccent": { "type": "color", "label": "Màu phụ" }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "label": "Thương hiệu",
+      "fields": {
+        "logo": { "type": "image", "label": "Logo" },
+        "name": { "type": "text", "label": "Tên thương hiệu" },
+        "visible": { "type": "boolean", "label": "Hiển thị" }
+      },
+      "fieldOrder": ["logo", "name"]
+    },
+    "hero": {
+      "type": "object",
+      "label": "Banner đầu trang",
+      "fields": {
+        "title": { "type": "text", "label": "Tiêu đề" },
+        "subtitle": { "type": "textarea", "label": "Mô tả ngắn" },
+        "background": { "type": "image", "label": "Ảnh nền" }
+      }
+    },
+    "stats": {
+      "type": "array",
+      "label": "Số liệu thống kê",
+      "itemLabel": "Số liệu",
+      "emptyItem": { "value": "", "label": "" },
+      "fields": {
+        "value": { "type": "text", "label": "Số liệu" },
+        "label": { "type": "text", "label": "Nhãn" }
+      }
+    },
+    "services": {
+      "type": "object",
+      "label": "Dịch vụ điều trị",
+      "fields": {
+        "eyebrow": { "type": "text", "label": "Nhãn nhỏ" },
+        "title": { "type": "text", "label": "Tiêu đề" },
+        "items": {
+          "type": "array",
+          "label": "Danh sách dịch vụ",
+          "itemLabel": "Dịch vụ",
+          "emptyItem": { "title": "", "tech": "", "desc": "", "image": "" },
+          "fields": {
+            "title": { "type": "text", "label": "Tên dịch vụ" },
+            "tech": { "type": "text", "label": "Công nghệ áp dụng" },
+            "desc": { "type": "textarea", "label": "Mô tả" },
+            "image": { "type": "image", "label": "Ảnh minh hoạ" }
+          }
+        }
+      }
+    },
+    "doctors": {
+      "type": "array",
+      "label": "Đội ngũ bác sĩ",
+      "itemLabel": "Bác sĩ",
+      "emptyItem": {
+        "name": "",
+        "title": "",
+        "avatar": "",
+        "contact": { "phone": "", "email": "" }
+      },
+      "fields": {
+        "name": { "type": "text", "label": "Họ tên" },
+        "title": { "type": "text", "label": "Chức danh" },
+        "avatar": { "type": "image", "label": "Ảnh đại diện" },
+        "contact": {
+          "type": "object",
+          "label": "Liên hệ",
+          "fields": {
+            "phone": { "type": "text", "label": "Số điện thoại" },
+            "email": { "type": "text", "label": "Email" }
+          }
+        }
+      }
+    },
+    "visible": {
+      "type": "object",
+      "label": "Hiển thị section",
+      "fields": {
+        "hero": { "type": "boolean", "label": "Banner đầu trang" },
+        "stats": { "type": "boolean", "label": "Số liệu thống kê" },
+        "services": { "type": "boolean", "label": "Dịch vụ điều trị" },
+        "doctors": { "type": "boolean", "label": "Đội ngũ bác sĩ" }
+      }
+    }
+  },
+  "themes": {
+    "themeA": { "label": "Đỏ", "colors": { "themePrimary": "#dc2626", "themeAccent": "#f97316" } },
+    "themeB": { "label": "Xanh", "colors": { "themePrimary": "#0284c7", "themeAccent": "#0891b2" } }
+  }
+}

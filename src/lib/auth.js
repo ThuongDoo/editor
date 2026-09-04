@@ -10,7 +10,7 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { auth, db } from './firebase'
 
@@ -29,6 +29,26 @@ export function useAuthUser() {
   }, [])
 
   return { user, loading }
+}
+
+// Live subscription on `users/{uid}.role` (same shape `signUp` writes below)
+// — ported from the sibling `admin` app's identical hook, so a role change
+// there takes effect here without the user having to sign in again.
+export function useUserRole(uid) {
+  const [entry, setEntry] = useState(null) // { uid, role }
+
+  useEffect(() => {
+    if (!uid) return undefined
+    return onSnapshot(
+      doc(db, 'users', uid),
+      (snapshot) => setEntry({ uid, role: snapshot.exists() ? (snapshot.data().role ?? null) : null }),
+      () => setEntry({ uid, role: null }),
+    )
+  }, [uid])
+
+  if (!uid) return { role: null, loading: false }
+  if (!entry || entry.uid !== uid) return { role: null, loading: true }
+  return { role: entry.role, loading: false }
 }
 
 export function signIn(email, password) {
