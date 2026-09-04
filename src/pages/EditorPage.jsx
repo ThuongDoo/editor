@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import DomainEditModal from "../components/DomainEditModal";
 import Loading from "../components/Loading";
 import SchemaForm from "../components/SchemaForm";
+import SupportMenu from "../components/SupportMenu";
 import { useAuthUser } from "../lib/auth";
+import { useWebsiteDomain } from "../lib/domains";
 import { EditorContext } from "../lib/editorContext";
 import { useTemplateSchema } from "../lib/templates";
 import { saveWebsiteConfig, useWebsite } from "../lib/websites";
@@ -11,6 +14,8 @@ export default function EditorPage() {
   const { websiteId } = useParams();
   const { user } = useAuthUser();
   const { website, config, loading, error } = useWebsite(websiteId);
+  const { domain, loading: domainLoading, setDomain } = useWebsiteDomain(websiteId);
+  const [isDomainModalOpen, setDomainModalOpen] = useState(false);
 
   const {
     sections,
@@ -71,9 +76,31 @@ export default function EditorPage() {
           <div className="page-header-title">
             <span className="page-header-eyebrow">Đang chỉnh sửa</span>
             <h1>{websiteId}</h1>
+            {!domainLoading &&
+              (domain ? (
+                <span className="domain-badge">🌐 {domain.domain}</span>
+              ) : (
+                <button
+                  type="button"
+                  className="domain-add-btn"
+                  onClick={() => setDomainModalOpen(true)}
+                >
+                  + Thêm tên miền
+                </button>
+              ))}
           </div>
           <Link to="/">&larr; Danh sách website</Link>
         </header>
+
+        <DomainEditModal
+          isOpen={isDomainModalOpen}
+          onClose={() => setDomainModalOpen(false)}
+          websiteId={websiteId}
+          onSaved={(updated) => {
+            setDomain(updated);
+            setDomainModalOpen(false);
+          }}
+        />
 
         <SchemaForm
           sections={sections}
@@ -97,6 +124,8 @@ export default function EditorPage() {
             <span className="form-error">Lưu thất bại, thử lại.</span>
           )}
         </div>
+
+        <SupportMenu websiteId={websiteId} userId={user?.uid} />
       </main>
     </EditorContext.Provider>
   );

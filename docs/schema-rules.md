@@ -67,7 +67,42 @@ section.
 ```
 → `config.stats = [ { value, label }, ... ]`
 
-### c) Object section có 1 field dạng mảng lồng bên trong
+### c) Array section/field — dữ liệu là 1 mảng giá trị đơn giản
+
+Nếu mỗi phần tử của mảng chỉ là 1 giá trị đơn (string/number/boolean),
+không phải object — dùng `"of": "<leafType>"` thay cho `"fields"`.
+`emptyItem` ở đây cũng là 1 giá trị đơn (`""`, không phải `{ value: "" }`).
+
+```json
+"tags": {
+  "type": "array",
+  "label": "Từ khoá",
+  "itemLabel": "Từ khoá",
+  "of": "text",
+  "emptyItem": ""
+}
+```
+→ `config.tags = [ "spa", "clinic", "wellness" ]`
+
+Áp dụng y hệt cho field lồng bên trong 1 object section:
+
+```json
+"paragraphs": {
+  "type": "array",
+  "label": "Đoạn văn",
+  "itemLabel": "Đoạn văn",
+  "of": "textarea",
+  "emptyItem": ""
+}
+```
+
+⚠️ Item dạng `of` (giá trị đơn) **không có nút "Ẩn"** như item dạng `fields`
+(object) — giá trị đơn không có chỗ để giữ cờ `hidden` mà không biến nó
+thành object. Item kiểu `of` chỉ xoá được, không ẩn/hiện được. Nếu cần vừa
+có `hidden` vừa đơn giản, dùng dạng `fields` với đúng 1 field (mục b), ví
+dụ `fields: { "text": { "type": "textarea" } }`.
+
+### d) Object section có 1 field dạng mảng lồng bên trong
 
 Muốn 1 section vừa có thuộc tính riêng vừa có danh sách lặp lại (trước đây
 gọi là "mixed section") → khai section là `type: "object"` như bình
@@ -99,9 +134,9 @@ sẽ lưu trong `config`.
 ```
 → `config.services = { eyebrow, title, items: [ {title, tech, desc, image}, ... ] }`
 
-### d) Lồng nhiều tầng
+### e) Lồng nhiều tầng
 
-Vì mỗi field `object`/`array` tự đệ quy đúng luật ở mục a/b, bạn có thể
+Vì mỗi field `object`/`array` tự đệ quy đúng luật ở mục a/b/c, bạn có thể
 lồng bao nhiêu tầng cũng được — ví dụ 1 field `type: "object"` nằm bên
 trong `fields` của 1 array section (mỗi item của mảng có 1 field con là
 object):
@@ -150,12 +185,12 @@ chứa object/record, giống hầu hết hệ schema khác (Sanity, Contentful.
 
 ## 4. Các `type` hợp lệ
 
-**Container** (bắt buộc có `fields`, có thể lồng đệ quy):
+**Container** (có thể lồng đệ quy):
 
 | type     | Ý nghĩa                          |
 |----------|-----------------------------------|
 | `object` | 1 object phẳng, dùng `fields`      |
-| `array`  | 1 mảng item, dùng `fields` + `itemLabel`/`emptyItem` |
+| `array`  | 1 mảng item, dùng `itemLabel`/`emptyItem` + **1 trong 2**: `fields` (item là object, mục 2b) hoặc `of: "<leafType>"` (item là giá trị đơn, mục 2c) |
 
 **Leaf** (giá trị cuối, không có `fields`):
 
@@ -227,7 +262,9 @@ Thiếu `type` hoặc `type` lạ ở field lá → fallback về `text`.
   `type`/`label` bên trong, chỉ có giá trị rỗng đúng hình dạng dữ liệu.
 - Với field con dạng `object`, `emptyItem` cũng lồng 1 object con y hệt
   cấu trúc `fields` của field đó (xem ví dụ `doctors.emptyItem.contact` ở
-  mục 2d) — không viết `{ "type": "object", ... }`.
+  mục 2e) — không viết `{ "type": "object", ... }`.
+- Với array dùng `of` (item là giá trị đơn, mục 2c), `emptyItem` là **1
+  giá trị đơn** (`""`/`false`/`null` tuỳ `of`), không phải object.
 - Giá trị rỗng theo type: `""` cho text/textarea/color/url/image, `false`
   cho boolean, `null` cho number, object rỗng lồng đúng cấu trúc cho
   `object`, `[]` cho `array`.
@@ -241,8 +278,13 @@ Thiếu `type` hoặc `type` lạ ở field lá → fallback về `text`.
 - [ ] Mọi section và mọi field container đều có `"type"` tường minh
       (`"object"` hoặc `"array"`).
 - [ ] `fields` luôn là map `{ key: { type, label, ... } }`, không phải mảng.
+- [ ] Mỗi field `type: "array"` khai đúng **1 trong 2**: `fields` (item là
+      object) hoặc `of` (item là giá trị đơn) — không khai cả hai, không
+      để trống cả hai.
 - [ ] Không có field nào `type: "array"` mà item của nó lại là
       `type: "array"` trực tiếp (mảng-trong-mảng không hỗ trợ).
+- [ ] Array dùng `of` sẽ **không có nút ẩn/hiện item** (chỉ xoá được) — nếu
+      cần cả hai, đổi sang `fields` với 1 field duy nhất.
 - [ ] `emptyItem` chỉ chứa **giá trị**, không chứa `type`/`label`.
 - [ ] Field key trong `fields`/`emptyItem`/`fieldOrder` viết khớp nhau
       tuyệt đối (phân biệt hoa/thường), ở mọi tầng lồng.

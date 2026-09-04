@@ -52,17 +52,29 @@ function buildObjectFieldDescriptor(key, spec) {
   }
 }
 
+// An array's item is either a record (`fields`, the default — object with
+// named sub-fields) or a bare leaf value (`of: "<leafType>"` — a plain
+// string/number/boolean, no sub-fields at all, e.g. `paragraphs: ["p1",
+// "p2"]`). `emptyItem` for a leaf item is the value itself (`""`, not
+// `{ value: "" }`), not an object.
+function buildArrayItem(spec) {
+  if (spec.of) {
+    return { type: normalizeType(spec.of), emptyItem: spec.emptyItem }
+  }
+  return {
+    type: 'object',
+    fields: normalizeFieldsMap(spec.fields, spec.fieldOrder),
+    emptyItem: spec.emptyItem,
+  }
+}
+
 function buildArrayFieldDescriptor(key, spec) {
   return {
     key,
     label: spec.label,
     itemLabel: spec.itemLabel,
     type: 'array',
-    item: {
-      type: 'object',
-      fields: normalizeFieldsMap(spec.fields, spec.fieldOrder),
-      emptyItem: spec.emptyItem,
-    },
+    item: buildArrayItem(spec),
   }
 }
 
@@ -88,11 +100,7 @@ function buildSectionDescriptor(sectionId, section) {
       label: section.label,
       itemLabel: section.itemLabel,
       type: 'array',
-      item: {
-        type: 'object',
-        fields: normalizeFieldsMap(section.fields, section.fieldOrder),
-        emptyItem: section.emptyItem,
-      },
+      item: buildArrayItem(section),
     }
   }
 

@@ -1,13 +1,13 @@
-import { buildDefault } from '../lib/schemaDefaults'
-import FieldInput from './FieldInput'
-import ImageField from './ImageField'
+import { buildDefault } from "../lib/schemaDefaults";
+import FieldInput from "./FieldInput";
+import ImageField from "./ImageField";
 
 // Dispatches a single field spec ({ key, label, type, fields?, item? }) to
 // the right control. No dot-paths: each level gets its own value slice and
 // an onChange for that slice, threaded down by the container components
 // below (ObjectFieldGroup, ArrayFieldList).
 export function FieldRenderer({ field, value, onChange }) {
-  if (field.type === 'object') {
+  if (field.type === "object") {
     return (
       <ObjectFieldGroup
         fields={field.fields}
@@ -15,20 +15,22 @@ export function FieldRenderer({ field, value, onChange }) {
         onChange={onChange}
         label={field.label}
       />
-    )
+    );
   }
 
-  if (field.type === 'array') {
-    return <ArrayFieldList field={field} value={value} onChange={onChange} />
+  if (field.type === "array") {
+    return <ArrayFieldList field={field} value={value} onChange={onChange} />;
   }
 
-  if (field.type === 'image') {
+  if (field.type === "image") {
     return (
       <label className="schema-form-row">
-        {field.label && <span className="schema-form-label">{field.label}</span>}
+        {field.label && (
+          <span className="schema-form-label">{field.label}</span>
+        )}
         <ImageField value={value} onChange={onChange} />
       </label>
-    )
+    );
   }
 
   return (
@@ -36,14 +38,14 @@ export function FieldRenderer({ field, value, onChange }) {
       {field.label && <span className="schema-form-label">{field.label}</span>}
       <FieldInput field={field} value={value} onChange={onChange} />
     </label>
-  )
+  );
 }
 
 // A fixed nested group of fields (object type, or a section's top-level
 // fields). `value` defaults to `{}` so a field missing from an older
 // website's config still renders with an empty control instead of crashing.
 export function ObjectFieldGroup({ fields, value, onChange, label }) {
-  const obj = value ?? {}
+  const obj = value ?? {};
 
   return (
     <fieldset className="field-group">
@@ -57,69 +59,82 @@ export function ObjectFieldGroup({ fields, value, onChange, label }) {
         />
       ))}
     </fieldset>
-  )
+  );
 }
 
-// A repeatable list of items (array type). Each item gets a reserved
-// `hidden` flag alongside its declared fields — a soft-hide the live site
-// is expected to respect, kept separate from deleting the item outright.
-// Deliberately no reorder controls (see plan).
+// A repeatable list of items (array type). An object item (the default —
+// `field.item.type === "object"`) gets a reserved `hidden` flag alongside
+// its declared fields — a soft-hide the live site is expected to respect,
+// kept separate from deleting the item outright (the toggle for it is
+// currently disabled in the UI below, see the commented-out checkbox). A
+// leaf item (`field.item` is a bare type like "text", declared via `of` —
+// see schemaAdapter.js) is the value itself, with no room for a `hidden`
+// flag without turning it into an object, so leaf-item arrays only support
+// delete. Deliberately no reorder controls (see plan).
 export function ArrayFieldList({ field, value, onChange }) {
-  const items = value ?? []
+  const items = value ?? [];
+  const isObjectItem = field.item.type === "object";
 
   function updateItem(index, newItemValue) {
-    onChange(items.map((item, i) => (i === index ? newItemValue : item)))
+    onChange(items.map((item, i) => (i === index ? newItemValue : item)));
   }
 
   function removeItem(index) {
-    onChange(items.filter((_, i) => i !== index))
-  }
-
-  function toggleHidden(index) {
-    updateItem(index, { ...items[index], hidden: !items[index]?.hidden })
+    onChange(items.filter((_, i) => i !== index));
   }
 
   function addItem() {
     // Prefer the schema-authored `emptyItem` (may deliberately differ from
     // type-derived defaults) over buildDefault, which is just a fallback.
-    const empty = field.item.emptyItem ?? buildDefault(field.item)
-    onChange([...items, { ...empty, hidden: false }])
+    const empty = field.item.emptyItem ?? buildDefault(field.item);
+    onChange(isObjectItem ? [...items, { ...empty, hidden: false }] : [...items, empty]);
   }
 
-  const itemLabel = field.itemLabel ?? 'Mục'
+  const itemLabel = field.itemLabel ?? "Mục";
 
   return (
     <div className="array-field">
       {field.label && <p className="array-field-label">{field.label}</p>}
       {items.map((item, index) => (
-        <div key={index} className={`array-item${item?.hidden ? ' is-hidden' : ''}`}>
+        <div
+          key={index}
+          className={`array-item${isObjectItem && item?.hidden ? " is-hidden" : ""}`}
+        >
           <div className="array-item-header">
             <span>
               {itemLabel} #{index + 1}
-              {item?.hidden && <span className="badge-hidden">Đã ẩn</span>}
+              {isObjectItem && item?.hidden && <span className="badge-hidden">Đã ẩn</span>}
             </span>
-            <label className="switch-inline">
+            {/* <label className="switch-inline">
               <input
                 type="checkbox"
                 checked={!item?.hidden}
                 onChange={() => toggleHidden(index)}
               />
               Hiển thị
-            </label>
+            </label> */}
             <button type="button" onClick={() => removeItem(index)}>
               Xoá
             </button>
           </div>
-          <ObjectFieldGroup
-            fields={field.item.fields}
-            value={item}
-            onChange={(v) => updateItem(index, v)}
-          />
+          {isObjectItem ? (
+            <ObjectFieldGroup
+              fields={field.item.fields}
+              value={item}
+              onChange={(v) => updateItem(index, v)}
+            />
+          ) : (
+            <FieldRenderer
+              field={field.item}
+              value={item}
+              onChange={(v) => updateItem(index, v)}
+            />
+          )}
         </div>
       ))}
       <button type="button" onClick={addItem}>
         + Thêm {itemLabel}
       </button>
     </div>
-  )
+  );
 }

@@ -40,21 +40,31 @@ function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
-// Merges field specs across every item of a sample array, so a field only
-// present on some items (e.g. an optional `image`) still gets declared. The
-// reserved `hidden` flag is skipped — the editor manages it itself, it's
-// never part of authored `fields` (see docs/schema-rules.md).
-function inferArrayItemFields(items, warnings, path) {
+// Infers the shape of an array's items from a sample array — either a
+// record (`fields`, merged across every object item so a field only
+// present on some items, e.g. an optional `image`, still gets declared —
+// the reserved `hidden` flag is skipped, it's never part of authored
+// `fields`, see docs/schema-rules.md) or a bare leaf value (`of`, when
+// every item is a plain string/number/boolean — see schemaAdapter.js's
+// `buildArrayItem`). A mix of both in the same sample array only infers
+// from the object items, since a single array can't be both shapes.
+function inferArraySpec(items, warnings, path) {
   const objectItems = items.filter(isPlainObject)
-  if (items.length > 0 && objectItems.length === 0) {
-    warnings.push(`Mảng "${path}" chứa giá trị đơn giản (không phải object) — chưa hỗ trợ tự sinh field, cần khai tay "fields"/"emptyItem".`)
-    return {}
-  }
+  const primitiveItems = items.filter((item) => !isPlainObject(item) && !Array.isArray(item))
+
   if (items.length === 0) {
-    warnings.push(`Mảng "${path}" đang rỗng trong config mẫu — không suy ra được field, cần khai tay "fields"/"emptyItem".`)
-    return {}
+    warnings.push(`Mảng "${path}" đang rỗng trong config mẫu — không suy ra được kiểu item, cần khai tay "fields" hoặc "of"/"emptyItem".`)
+    return { fields: {}, emptyItem: {} }
   }
 
+  if (objectItems.length === 0) {
+    const of = inferLeafType(primitiveItems[0])
+    return { of, emptyItem: emptyValueFor({ type: of }) }
+  }
+
+  if (primitiveItems.length > 0) {
+    warnings.push(`Mảng "${path}" lẫn cả object và giá trị đơn giản — chỉ suy field từ các item dạng object, bỏ qua các item còn lại.`)
+  }
   const fields = {}
   for (const item of objectItems) {
     for (const [key, value] of Object.entries(item)) {
@@ -62,19 +72,15 @@ function inferArrayItemFields(items, warnings, path) {
       if (!(key in fields)) fields[key] = inferFieldSpec(key, value, warnings, `${path}[].${key}`)
     }
   }
-  return fields
+  return { fields, emptyItem: Object.fromEntries(Object.keys(fields).map((k) => [k, emptyValueFor(fields[k])])) }
 }
 
 function inferFieldSpec(key, value, warnings, path) {
   if (Array.isArray(value)) {
-    const fields = inferArrayItemFields(value, warnings, path)
-    return {
-      type: 'array',
-      label: key,
-      itemLabel: key,
-      fields,
-      emptyItem: Object.fromEntries(Object.keys(fields).map((k) => [k, emptyValueFor(fields[k])])),
-    }
+    const { fields, of, emptyItem } = inferArraySpec(value, warnings, path)
+    return of !== undefined
+      ? { type: 'array', label: key, itemLabel: key, of, emptyItem }
+      : { type: 'array', label: key, itemLabel: key, fields, emptyItem }
   }
   if (isPlainObject(value)) {
     const fields = {}
@@ -104,7 +110,9 @@ export function inferTemplateFromConfig(config) {
     const spec = inferFieldSpec(sectionId, value, warnings, sectionId)
     schema[sectionId] =
       spec.type === 'array'
-        ? { type: 'array', label: spec.label, itemLabel: spec.itemLabel, fields: spec.fields, emptyItem: spec.emptyItem }
+        ? spec.of !== undefined
+          ? { type: 'array', label: spec.label, itemLabel: spec.itemLabel, of: spec.of, emptyItem: spec.emptyItem }
+          : { type: 'array', label: spec.label, itemLabel: spec.itemLabel, fields: spec.fields, emptyItem: spec.emptyItem }
         : { type: 'object', label: spec.label, fields: spec.fields }
     sectionOrder.push(sectionId)
   }

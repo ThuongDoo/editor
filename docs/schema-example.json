@@ -25,7 +25,14 @@
       "fields": {
         "title": { "type": "text", "label": "Tiêu đề" },
         "subtitle": { "type": "textarea", "label": "Mô tả ngắn" },
-        "background": { "type": "image", "label": "Ảnh nền" }
+        "background": { "type": "image", "label": "Ảnh nền" },
+        "tags": {
+          "type": "array",
+          "label": "Từ khoá",
+          "itemLabel": "Từ khoá",
+          "of": "text",
+          "emptyItem": ""
+        }
       }
     },
     "stats": {
