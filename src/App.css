@@ -985,23 +985,7 @@ button[type='submit'],
 
 .visibility-toggle {
   flex: none;
-  padding: 6px 8px;
-  border: none;
-  background: none;
-  box-shadow: none;
-  font-size: 14px;
-  opacity: 0.55;
-  filter: grayscale(1);
-
-  &:hover:not(:disabled) {
-    opacity: 1;
-    box-shadow: none;
-  }
-
-  &.is-visible {
-    opacity: 1;
-    filter: none;
-  }
+  margin: 0 10px;
 }
 
 .schema-form-panel {

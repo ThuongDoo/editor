@@ -129,17 +129,50 @@ function buildThemesFromConfig(config, warnings) {
   return { theme1: { label: 'Theme 1', colors: Object.fromEntries(colorEntries) } }
 }
 
+// `visible` isn't a real section — see docs/schema-rules.md §5: a live
+// config centralizes every section's show/hide flag under the single map
+// `config.visible.<sectionId>` instead of storing it per-section, so a
+// sample config's `visible: { hero: true, stats: false }` must NOT become
+// its own schema tab of boolean fields. Once every other section has been
+// inferred, each of `visible`'s own keys is applied as a `fields.visible:
+// boolean` on the matching section instead — that's what the editor
+// actually renders as an eye icon next to the section (see
+// sectionVisibility.js/SectionNav.jsx), not a field in the form body. Only
+// object sections support this (an array section has no section-level
+// `fields` of its own to add it to), so a key that doesn't match any
+// section, or matches an array one, gets a warning instead of being
+// silently dropped or producing an invalid schema.
+function applyVisibleToggles(schema, visibleMap, warnings) {
+  for (const sectionId of Object.keys(visibleMap)) {
+    const section = schema[sectionId]
+    if (!section) {
+      warnings.push(`"visible.${sectionId}" không khớp section nào trong config — bỏ qua.`)
+      continue
+    }
+    if (section.type !== 'object') {
+      warnings.push(
+        `"visible.${sectionId}" trỏ tới 1 array section — array section không tự có toggle ẩn/hiện, cần đổi "${sectionId}" thành object section chứa 1 field "type": "array" bên trong (xem docs/schema-rules.md mục 5).`,
+      )
+      continue
+    }
+    section.fields.visible = { type: 'boolean', label: 'Hiển thị' }
+  }
+}
+
 // `config`: a parsed sample website config, e.g. `{ brand: { name, logo },
 // stats: [ { value, label } ], visible: { hero: true } }`. Every top-level
 // key becomes a section — sections must be object or array per the schema
 // rules, so a stray top-level primitive is skipped with a warning rather
-// than producing an invalid section.
+// than producing an invalid section. `visible` is handled separately (see
+// applyVisibleToggles) rather than falling into this loop.
 export function inferTemplateFromConfig(config) {
   const warnings = []
   const schema = {}
   const sectionOrder = []
+  const visibleMap = isPlainObject(config.visible) ? config.visible : null
 
   for (const [sectionId, value] of Object.entries(config)) {
+    if (sectionId === 'visible') continue
     if (!Array.isArray(value) && !isPlainObject(value)) {
       warnings.push(`Bỏ qua "${sectionId}": section cấp cao nhất phải là object hoặc array, không phải giá trị đơn.`)
       continue
@@ -160,6 +193,8 @@ export function inferTemplateFromConfig(config) {
         : { type: 'object', label: spec.label, fields: spec.fields, fieldOrder: spec.fieldOrder }
     sectionOrder.push(sectionId)
   }
+
+  if (visibleMap) applyVisibleToggles(schema, visibleMap, warnings)
 
   const themes = buildThemesFromConfig(config, warnings)
 

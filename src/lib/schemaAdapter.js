@@ -124,6 +124,32 @@ function unwrapSchema(raw) {
   return { schemaMap: raw ?? {}, order: null }
 }
 
+// `visible` is never its own tab (see docs/schema-rules.md §5 and
+// sectionVisibility.js/SectionNav.jsx): the real per-site show/hide value
+// lives at `config.visible.<sectionId>`, and a section opts into the eye-icon
+// toggle by declaring its own `fields.visible: boolean`. Some templates —
+// including ones drafted before schemaInference.js started handling this —
+// were authored/generated with `visible` as a literal top-level section
+// instead, e.g. `{ visible: { fields: { hero: {...}, stats: {...} } } }`.
+// Rather than rendering that as a tab of plain checkboxes (see
+// normalizeSchema below), its field keys are applied the same way the
+// generator does: for each one that names an existing object section, add a
+// `visible` field to that section instead, so it gets the eye icon like a
+// correctly-authored template would. Array sections can't take the field the
+// same way (buildSectionDescriptor gives them no section-level `fields` of
+// their own) and a key with no matching section is just ignored — this runs
+// on every load of an existing site's editor, not admin-facing template
+// authoring, so there's nowhere to surface a warning for stale data.
+function applyVisibleSection(sections, visibleSection) {
+  if (!visibleSection || typeof visibleSection !== 'object') return
+  for (const sectionId of Object.keys(visibleSection.fields ?? {})) {
+    const section = sections.find((s) => s.id === sectionId)
+    if (!section || section.type !== 'object') continue
+    if (section.fields.some((f) => f.key === 'visible')) continue
+    section.fields.push({ key: 'visible', label: 'Hiển thị', type: 'boolean' })
+  }
+}
+
 export function normalizeSchema(raw) {
   const { schemaMap, order } = unwrapSchema(raw)
 
@@ -134,9 +160,13 @@ export function normalizeSchema(raw) {
     ? [...order, ...Object.keys(schemaMap).filter((id) => !order.includes(id))]
     : Object.keys(schemaMap)
 
-  return orderedIds
-    .filter((sectionId) => schemaMap[sectionId])
+  const sections = orderedIds
+    .filter((sectionId) => sectionId !== 'visible' && schemaMap[sectionId])
     .map((sectionId) => buildSectionDescriptor(sectionId, schemaMap[sectionId]))
+
+  applyVisibleSection(sections, schemaMap.visible)
+
+  return sections
 }
 
 // Optional top-level `themes` map — named color presets a website can start

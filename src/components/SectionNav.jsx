@@ -15,18 +15,15 @@ export default function SectionNav({ sections, activeId, onSelect, isSectionVisi
               {section.label ?? section.id}
             </button>
             {hasVisibleToggle(section) && (
-              <button
-                type="button"
-                className={`visibility-toggle ${visible ? 'is-visible' : 'is-hidden'}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleVisible(section.id)
-                }}
-                title={visible ? 'Đang hiển thị trên site — bấm để ẩn' : 'Đang ẩn khỏi site — bấm để hiện'}
-                aria-label={`${visible ? 'Ẩn' : 'Hiện'} section ${section.label ?? section.id}`}
-              >
-                {visible ? '👁️' : '🙈'}
-              </button>
+              <input
+                type="checkbox"
+                className="visibility-toggle"
+                checked={visible}
+                onChange={() => onToggleVisible(section.id)}
+                onClick={(e) => e.stopPropagation()}
+                title={visible ? 'Đang hiển thị trên site — bỏ chọn để ẩn' : 'Đang ẩn khỏi site — chọn để hiện'}
+                aria-label={`Hiển thị section ${section.label ?? section.id}`}
+              />
             )}
           </div>
         )
