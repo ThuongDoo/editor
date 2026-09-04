@@ -92,6 +92,32 @@ function inferFieldSpec(key, value, warnings, path) {
   return { type: inferLeafType(value), label: key }
 }
 
+// Seeds the template's `themes` preset map (see schemaAdapter.js's
+// normalizeThemes/findColorFields and ThemeEditor.jsx) from the sample
+// config's own `theme` section, e.g. `{ themePrimary: "#0284c7", themeAccent:
+// "#0891b2" }` becomes `{ theme1: { label: "Theme 1", colors: { ... } } }` —
+// a starting preset named after the color values already used by the pasted
+// site, so the admin isn't left with an empty preset list. Only the fields
+// that are actual hex colors go into the preset; a `theme` section with none
+// (e.g. it only holds a `mode` flag) can't seed one, so `themes` stays empty
+// and the admin adds preset(s) by hand in the reviewed JSON (theme2, theme3, ...).
+function buildThemesFromConfig(config, warnings) {
+  const themeSection = config.theme
+  if (!isPlainObject(themeSection)) return {}
+
+  const colorEntries = Object.entries(themeSection).filter(
+    ([, value]) => typeof value === 'string' && HEX_COLOR_RE.test(value),
+  )
+  if (colorEntries.length === 0) {
+    warnings.push(
+      'Section "theme" không có field nào là mã màu hex — không tự tạo được theme mẫu, cần khai tay "themes" trong JSON ở bước 3.',
+    )
+    return {}
+  }
+
+  return { theme1: { label: 'Theme 1', colors: Object.fromEntries(colorEntries) } }
+}
+
 // `config`: a parsed sample website config, e.g. `{ brand: { name, logo },
 // stats: [ { value, label } ], visible: { hero: true } }`. Every top-level
 // key becomes a section — sections must be object or array per the schema
@@ -117,5 +143,7 @@ export function inferTemplateFromConfig(config) {
     sectionOrder.push(sectionId)
   }
 
-  return { schema, sectionOrder, themes: {}, defaultData: config, warnings }
+  const themes = buildThemesFromConfig(config, warnings)
+
+  return { schema, sectionOrder, themes, defaultData: config, warnings }
 }

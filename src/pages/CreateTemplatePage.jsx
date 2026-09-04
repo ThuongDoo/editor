@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import JsonCodeEditor from '../components/JsonCodeEditor'
 import { parseRelaxedJson, repairJsonText } from '../lib/relaxedJson'
 import { inferTemplateFromConfig } from '../lib/schemaInference'
 import { createTemplate, templateExists } from '../lib/templates'
@@ -32,9 +33,8 @@ export default function CreateTemplatePage() {
   function handleFormatConfig() {
     setGenerateError(null)
     try {
-      const fixed = repairJsonText(configText)
-      setFormatNotice(fixed === configText ? null : 'Đã tự động sửa lỗi cú pháp JSON.')
-      setConfigText(fixed)
+      setConfigText(repairJsonText(configText))
+      setFormatNotice('Đã format lại JSON (và tự sửa lỗi cú pháp nếu có).')
     } catch (err) {
       setFormatNotice(null)
       setGenerateError(`Không tự sửa được cú pháp: ${err.message}`)
@@ -125,11 +125,10 @@ export default function CreateTemplatePage() {
 
       <fieldset className="field-group">
         <legend>2. Dán config mẫu</legend>
-        <textarea
-          className="json-input"
-          rows={14}
+        <JsonCodeEditor
           value={configText}
-          onChange={(e) => setConfigText(e.target.value)}
+          onChange={setConfigText}
+          height="280px"
           placeholder={'{\n  "brand": { "name": "...", "logo": "https://..." },\n  "stats": [ { "value": "10+", "label": "Năm kinh nghiệm" } ]\n}'}
         />
         {generateError && <p className="form-error">{generateError}</p>}
@@ -154,14 +153,13 @@ export default function CreateTemplatePage() {
               ))}
             </ul>
           )}
-          <textarea
-            className="json-input"
-            rows={22}
+          <JsonCodeEditor
             value={draftText}
-            onChange={(e) => {
-              setDraftText(e.target.value)
+            onChange={(next) => {
+              setDraftText(next)
               resetSaveState()
             }}
+            height="480px"
           />
           <div className="editor-actions">
             <button type="button" onClick={handleSave} disabled={saveState === 'saving'}>

@@ -17,15 +17,10 @@ export function parseRelaxedJson(text) {
 }
 
 // Same repair pass as parseRelaxedJson, but returns the fixed JSON text
-// instead of a parsed value — used to show what was auto-corrected before
-// the admin generates a draft from it.
+// instead of a parsed value, pretty-printed — used both to show what was
+// auto-corrected before the admin generates a draft from it, and to turn a
+// pasted one-line/minified config into something with actual line breaks
+// to fold in the code editor.
 export function repairJsonText(text) {
-  try {
-    JSON.parse(text)
-    return text
-  } catch {
-    // fall through to the repair pass below
-  }
-
-  return jsonrepair(text)
+  return JSON.stringify(parseRelaxedJson(text), null, 2)
 }

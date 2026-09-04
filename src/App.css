@@ -224,6 +224,23 @@ input[type='file'] {
   resize: vertical;
 }
 
+/* JSON code editor (CodeMirror, VSCode-style fold gutter) ------------------- */
+
+.json-code-editor {
+  width: 100%;
+  resize: vertical;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+.json-code-editor .cm-editor {
+  height: 100%;
+}
+
+.json-code-editor .cm-scroller {
+  font-family: var(--mono);
+}
+
 /* Buttons ------------------------------------------------------------------ */
 
 button {
