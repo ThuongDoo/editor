@@ -78,7 +78,14 @@ export default function EditorPage() {
             <h1>{websiteId}</h1>
             {!domainLoading &&
               (domain ? (
-                <span className="domain-badge">🌐 {domain.domain}</span>
+                <a
+                  href={`https://${domain.domain}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="domain-badge"
+                >
+                  🌐 {domain.domain}
+                </a>
               ) : (
                 <button
                   type="button"

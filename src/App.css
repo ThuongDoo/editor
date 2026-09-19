@@ -542,6 +542,7 @@ button[type='submit'],
   border-color: var(--accent-border);
   background: var(--accent-bg);
   color: var(--accent);
+  text-decoration: none;
 }
 
 .domain-badge-empty {
