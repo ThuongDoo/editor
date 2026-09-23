@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { uploadImage } from "../lib/storage";
+import { deleteImage, uploadImage } from "../lib/storage";
 import { createSupportRequest } from "../lib/support";
 import Modal from "./Modal";
 
@@ -53,6 +53,7 @@ export default function SupportCreateModal({
 
   function removeImage(url) {
     setImages((prev) => prev.filter((u) => u !== url));
+    deleteImage(url);
   }
 
   function handleRequestSubmit(e) {

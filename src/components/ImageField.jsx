@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useEditorContext } from '../lib/editorContext'
-import { uploadImage } from '../lib/storage'
+import { deleteImage, uploadImage } from '../lib/storage'
 
 export default function ImageField({ value, onChange }) {
   const { websiteId } = useEditorContext()
@@ -17,11 +17,17 @@ export default function ImageField({ value, onChange }) {
     try {
       const url = await uploadImage(websiteId, file)
       onChange(url)
+      deleteImage(value)
     } catch {
       setError('Tải ảnh thất bại, thử lại.')
     } finally {
       setUploading(false)
     }
+  }
+
+  function handleRemove() {
+    onChange('')
+    deleteImage(value)
   }
 
   return (
@@ -30,7 +36,7 @@ export default function ImageField({ value, onChange }) {
       <div className="image-field-controls">
         <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} />
         {value && !uploading && (
-          <button type="button" onClick={() => onChange('')}>
+          <button type="button" onClick={handleRemove}>
             🗑 Xoá ảnh
           </button>
         )}
